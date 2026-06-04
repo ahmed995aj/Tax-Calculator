@@ -183,17 +183,19 @@ function calculateTax() {
     document.getElementById("commissionTax").innerHTML =
         "<b>Commission Tax :</b> " + formatNumber(commissionTax);
 
-     document.getElementById("finalAnnualTax").innerHTML =
+    document.getElementById("finalAnnualTax").innerHTML =
         "<b>Final Annual Tax:</b> " + formatNumber(finalAnnualTax);
 
+    document.getElementById("monthlyBaseTax").innerHTML =
+        "<b>Monthly Tax ( No Commission):</b> " + formatNumber(monthlyBaseTax);
+
     document.getElementById("monthlyTax").innerHTML =
-        "<b>Monthly Tax:</b> " + formatNumber(monthlyTax);
+        "<b>Monthly Tax (Commission Included):</b> " + formatNumber(monthlyTax);
 
     document.getElementById("salaryAfterTax").innerHTML =
         "<b>Salary After Tax:</b> " + formatNumber(salaryAfterTax);
 
-        document.getElementById("monthlyBaseTax").innerHTML =
-        "<b>Monthly Tax ( No Commission):</b> " + formatNumber(monthlyBaseTax);
+
 
 
     document.getElementById("result").style.display = "block";
