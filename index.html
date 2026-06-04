@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,49 +48,41 @@ button {
 .result-row {
     margin-bottom: 8px;
 }
-.checkbox {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.checkbox input {
-    width: auto;
-    margin: 0;
-}
-
-.checkbox label {
-    margin: 0;
-}
 </style>
 </head>
+
 <body>
 
 <h1>Pakistan Tax Calculator</h1>
 
 <div class="form-group">
     <label>Monthly Salary</label>
-    <input type="number" id="monthlySalary" step="0.01" min="0">
+    <input type="number" id="monthlySalary">
+</div>
+
+<div class="form-group">
+    <label>Monthly Deduction</label>
+    <input type="number" id="monthlyDeduction" value="0">
+</div>
+
+<div class="form-group">
+    <label>Commission / Bonus</label>
+    <input type="number" id="commissionAmount" value="0">
 </div>
 
 <div class="form-group">
     <label>Remaining Months</label>
-    <input type="number" id="remainingMonths" min="1">
+    <input type="number" id="remainingMonths">
 </div>
 
 <div class="form-group">
     <label>YTD Taxable Salary</label>
-    <input type="number" id="ytdTaxableSalary" step="0.01" min="0">
+    <input type="number" id="ytdTaxableSalary">
 </div>
 
 <div class="form-group">
     <label>YTD Tax Paid</label>
-    <input type="number" id="ytdTaxPaid" step="0.01" min="0">
-</div>
-
-<div class="form-group checkbox">
-    <input type="checkbox" id="surcharge">
-    <label for="surcharge">Apply Surcharge (9%)</label>
+    <input type="number" id="ytdTaxPaid">
 </div>
 
 <button onclick="calculateTax()">Calculate Tax</button>
@@ -97,18 +90,17 @@ button {
 <div class="result" id="result" style="display:none;">
     <h2>Results</h2>
 
-    <div class="result-row" id="currentEmployerSalary"></div>
-    <div class="result-row" id="annualTaxableSalary"></div>
-    <div class="result-row" id="baseAnnualTax"></div>
-    <div class="result-row" id="surchargeTax"></div>
-    <div class="result-row" id="finalAnnualTax"></div>
-    <div class="result-row" id="remainingTax"></div>
-    <div class="result-row" id="monthlyTax"></div>
-    <div class="result-row" id="salaryAfterTax"></div>
+    <div id="annualIncome"></div>
+    <div id="baseIncome"></div>
+    <div id="baseTax"></div>
+    <div id="commissionTax"></div>
+    <div id="finalAnnualTax"></div>
+    <div id="monthlyTax"></div>
+    <div id="salaryAfterTax"></div>
+
+
 </div>
-
 <script>
-
 function formatNumber(value) {
     return Number(value).toLocaleString('en-US', {
         minimumFractionDigits: 2,
@@ -116,129 +108,88 @@ function formatNumber(value) {
     });
 }
 
+function calculateSlabTax(income) {
+    let tax = 0;
+
+    if (income <= 600000) tax = 0;
+    else if (income <= 1200000) tax = (income - 600000) * 0.01;
+    else if (income <= 2200000) tax = 6000 + ((income - 1200000) * 0.11);
+    else if (income <= 3200000) tax = 116000 + ((income - 2200000) * 0.23);
+    else if (income <= 4100000) tax = 346000 + ((income - 3200000) * 0.30);
+    else tax = 616000 + ((income - 4100000) * 0.35);
+
+    return tax;
+}
+
 function calculateTax() {
 
-    const monthlySalary =
-        parseFloat(document.getElementById("monthlySalary").value) || 0;
+    const monthlySalary = parseFloat(document.getElementById("monthlySalary").value) || 0;
+    const monthlyDeduction = parseFloat(document.getElementById("monthlyDeduction").value) || 0;
+    const commission = parseFloat(document.getElementById("commissionAmount").value) || 0;
+    const remainingMonths = parseInt(document.getElementById("remainingMonths").value) || 0;
+    const ytdTaxable = parseFloat(document.getElementById("ytdTaxableSalary").value) || 0;
+    const ytdTaxPaid = parseFloat(document.getElementById("ytdTaxPaid").value) || 0;
 
-    const remainingMonths =
-        parseInt(document.getElementById("remainingMonths").value) || 0;
-
-    const ytdTaxableSalary =
-        parseFloat(document.getElementById("ytdTaxableSalary").value) || 0;
-
-    const ytdTaxPaid =
-        parseFloat(document.getElementById("ytdTaxPaid").value) || 0;
-
-    const surchargeEnabled =
-        document.getElementById("surcharge").checked;
-
-    if (remainingMonths <= 0) {
-        alert("Remaining Months must be greater than 0.");
+    if (remainingMonths <= 0 || remainingMonths > 12) {
+        alert("Remaining Months must be between 1 and 12");
         return;
     }
 
-    const surchargeThreshold = 10000001;
-    const surchargePercent = 9;
+    // 1. ANNUAL INCOME (WITH COMMISSION)
+    const annualIncome =
+        (monthlySalary * remainingMonths) +
+        ytdTaxable +
+        commission -
+        monthlyDeduction ;
 
-    const currentEmployerSalary =
-        monthlySalary * remainingMonths;
+    // 2. BASE ANNUAL INCOME (NO COMMISSION)
+    const baseIncome = annualIncome - commission;
 
-    const annualTaxableSalary =
-        currentEmployerSalary + ytdTaxableSalary;
+    // 3. TAX CALCULATION
+    const baseTax = calculateSlabTax(baseIncome);
+    const totalTax = calculateSlabTax(annualIncome);
 
-    let annualTax = 0;
+    const commissionTax = totalTax - baseTax;
+    const finalAnnualTax=baseTax + commissionTax
 
-    if (annualTaxableSalary <= 600000) {
-        annualTax = 0;
-    }
-    else if (annualTaxableSalary <= 1200000) {
-        annualTax =
-            (annualTaxableSalary - 600000) * 0.01;
-    }
-    else if (annualTaxableSalary <= 2200000) {
-        annualTax =
-            6000 +
-            ((annualTaxableSalary - 1200000) * 0.11);
-    }
-    else if (annualTaxableSalary <= 3200000) {
-        annualTax =
-            116000 +
-            ((annualTaxableSalary - 2200000) * 0.23);
-    }
-    else if (annualTaxableSalary <= 4100000) {
-        annualTax =
-            346000 +
-            ((annualTaxableSalary - 3200000) * 0.30);
-    }
-    else {
-        annualTax =
-            616000 +
-            ((annualTaxableSalary - 4100000) * 0.35);
-    }
+    // 4. MONTHLY BASE TAX
+    let baseRemainingTax = baseTax - ytdTaxPaid;
+    if (baseRemainingTax < 0) baseRemainingTax = 0;
 
-    let surchargeTax = 0;
+    const monthlyBaseTax = baseRemainingTax / remainingMonths;
 
-    if (
-        surchargeEnabled &&
-        annualTaxableSalary >= surchargeThreshold
-    ) {
-        surchargeTax =
-            annualTax * (surchargePercent / 100);
-    }
+    // 5. FINAL MONTHLY TAX (IMPORTANT CHANGE)
+    const monthlyTax = monthlyBaseTax + commissionTax;
 
-    const finalAnnualTax =
-        annualTax + surchargeTax;
-
-    let remainingTax =
-        finalAnnualTax - ytdTaxPaid;
-
-    if (remainingTax < 0) {
-        remainingTax = 0;
-    }
-
-    const monthlyTax =
-        remainingTax / remainingMonths;
-
+    // 6. SALARY AFTER TAX
+    const calculatedSalary= monthlySalary + commission - monthlyDeduction
     const salaryAfterTax =
-        monthlySalary - monthlyTax;
+        calculatedSalary + commission - monthlyTax;
 
-    document.getElementById("currentEmployerSalary").innerHTML =
-        "<strong>Current Employee Annual Earnings:</strong> " +
-        formatNumber(currentEmployerSalary);
+    // OUTPUT
+     document.getElementById("baseIncome").innerHTML =
+        "<b>Base Income (No Commission):</b> " + formatNumber(baseIncome);
 
-    document.getElementById("annualTaxableSalary").innerHTML =
-        "<strong>Annual Taxable Salary:</strong> " +
-        formatNumber(annualTaxableSalary);
+    document.getElementById("annualIncome").innerHTML =
+        "<b>Annual Taxable Income:</b> " + formatNumber(annualIncome);
 
-    document.getElementById("baseAnnualTax").innerHTML =
-        "<strong>Base Annual Tax:</strong> " +
-        formatNumber(annualTax);
+    document.getElementById("baseTax").innerHTML =
+        "<b>Base Annual Tax:</b> " + formatNumber(baseTax);
 
-    document.getElementById("surchargeTax").innerHTML =
-        "<strong>Surcharge Tax:</strong> " +
-        formatNumber(surchargeTax);
+    document.getElementById("commissionTax").innerHTML =
+        "<b>Commission Tax :</b> " + formatNumber(commissionTax);
 
-    document.getElementById("finalAnnualTax").innerHTML =
-        "<strong>Final Annual Tax:</strong> " +
-        formatNumber(finalAnnualTax);
-
-    document.getElementById("remainingTax").innerHTML =
-        "<strong>Remaining Tax:</strong> " +
-        formatNumber(remainingTax);
+     document.getElementById("finalAnnualTax").innerHTML =
+        "<b>Final Annual Tax:</b> " + formatNumber(finalAnnualTax);
 
     document.getElementById("monthlyTax").innerHTML =
-        "<strong>Monthly Tax:</strong> " +
-        formatNumber(monthlyTax);
+        "<b>Monthly Tax:</b> " + formatNumber(monthlyTax);
 
     document.getElementById("salaryAfterTax").innerHTML =
-        "<strong>Salary After Tax:</strong> " +
-        formatNumber(salaryAfterTax);
+        "<b>Salary After Tax:</b> " + formatNumber(salaryAfterTax);
 
     document.getElementById("result").style.display = "block";
 }
-
 </script>
-
 </body>
 </html>
