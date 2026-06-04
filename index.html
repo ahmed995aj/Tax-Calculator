@@ -95,8 +95,11 @@ button {
     <div id="baseTax"></div>
     <div id="commissionTax"></div>
     <div id="finalAnnualTax"></div>
+    <div id="monthlyBaseTax"></div>
     <div id="monthlyTax"></div>
     <div id="salaryAfterTax"></div>
+
+
 
 
 </div>
@@ -150,6 +153,7 @@ function calculateTax() {
     const totalTax = calculateSlabTax(annualIncome);
 
     const commissionTax = totalTax - baseTax;
+
     const finalAnnualTax=baseTax + commissionTax
 
     // 4. MONTHLY BASE TAX
@@ -187,6 +191,10 @@ function calculateTax() {
 
     document.getElementById("salaryAfterTax").innerHTML =
         "<b>Salary After Tax:</b> " + formatNumber(salaryAfterTax);
+
+        document.getElementById("monthlyBaseTax").innerHTML =
+        "<b>Monthly Tax ( No Commission):</b> " + formatNumber(monthlyBaseTax);
+
 
     document.getElementById("result").style.display = "block";
 }
