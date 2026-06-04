@@ -164,7 +164,7 @@ function calculateTax() {
     // 6. SALARY AFTER TAX
     const calculatedSalary= monthlySalary + commission - monthlyDeduction
     const salaryAfterTax =
-        calculatedSalary + commission - monthlyTax;
+        calculatedSalary - monthlyTax;
 
     // OUTPUT
      document.getElementById("baseIncome").innerHTML =
